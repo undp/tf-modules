@@ -13,16 +13,26 @@ variable "vnet_map" {
   }
 }
 
-
+variable "zone_suffix" {
+  description = "Suffix for the Private Zone FQDN."
+  type        = string
+  default     = "space.link"
+}
 
 variable "zone_name" {
-  description = "Domain name for the Private DNS Zone."
+  description = "Zone name used before the `namespace` in the Private Zone FQDN."
   type        = string
   default     = ""
 }
 
+variable "registration_enabled" {
+  description = "Is auto-registration of virtual machine records in the virtual network in the Private DNS zone enabled? Defaults to `false`."
+  type        = bool
+  default     = false
+}
+
 variable "namespace" {
-  description = "Namespace to use in resource names and tags."
+  description = "Namespace used before the `zone_suffix` in the  Private Zone FQDN."
   type        = string
   default     = ""
 }
