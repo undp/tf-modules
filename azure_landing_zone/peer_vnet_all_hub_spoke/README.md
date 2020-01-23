@@ -18,7 +18,7 @@ Establishes forward peering named `{{namespace}}_{{vnet_hub_A}}_to_{{vnet_spoke_
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/peer_vnet_all_hub_spoke"
+  source = "github.com/undp/tf-modules//azure_landing_zone/peer_vnet_all_hub_spoke?ref=v0.1.0"
 
   vnet_map_hub = {
     vnet_hub_A = {

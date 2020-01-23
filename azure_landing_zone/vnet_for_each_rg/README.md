@@ -22,7 +22,7 @@ Each subnet is configured to use a subset of the VNET address space as defined b
 
 ```hcl
 module "vnets_init" {
-  source = "./modules/vnet_for_each_rg"
+  source = "github.com/undp/tf-modules//azure_landing_zone/vnet_for_each_rg?ref=v0.1.0"
 
   vnet_map  = {
     vnet_name_A = {

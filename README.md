@@ -8,7 +8,7 @@ Modules could be used in your `Terraform` code by referencing this repo in the `
 
 ```hcl
 module "resource_groups" {
-  source = "git:https://github.com/undp/tf-modules/azure_landing_zone//rg_for_each_location?ref=v0.1.0"
+  source = "github.com/undp/tf-modules//azure_landing_zone/rg_for_each_location?ref=v0.1.0"
 
   locations  = [
     "northeurope",

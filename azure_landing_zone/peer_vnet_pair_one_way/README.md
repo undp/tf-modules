@@ -18,7 +18,7 @@ Establishes a one-way peering between all pairs of Virtual Networks from `vnet_m
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/peer_vnet_pair_one_way"
+  source = "github.com/undp/tf-modules//azure_landing_zone/peer_vnet_pair_one_way?ref=v0.1.0"
 
   vnet_map_src  = {
     key_A = {

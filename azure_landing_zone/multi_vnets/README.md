@@ -14,7 +14,7 @@ Deploys VNETs specified by `region_map_vnets[key]` map into each corresponding R
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/multi_vnets"
+  source = "github.com/undp/tf-modules//azure_landing_zone/multi_vnets?ref=v0.1.0"
 
   region_map_rgs = {
     westeurope  = "rg1"

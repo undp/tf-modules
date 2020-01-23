@@ -20,7 +20,7 @@ Associates each deployed Network Security Group with all the subnets of the corr
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/nsg_for_each_vnet"
+  source = "github.com/undp/tf-modules//azure_landing_zone/nsg_for_each_vnet?ref=v0.1.0"
 
   nsg_rg_map = {
     westeurope  = "security_A"

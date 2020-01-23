@@ -18,7 +18,7 @@ Establishes a peering named as `{{namespace}}_{{vnet_name_A}}_to_{{vnet_name_B}}
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/peer_vnet_all_mesh"
+  source = "github.com/undp/tf-modules//azure_landing_zone/peer_vnet_all_mesh?ref=v0.1.0"
 
   vnet_map  = {
     vnet_name_A = {

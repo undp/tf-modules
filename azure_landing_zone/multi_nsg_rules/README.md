@@ -14,7 +14,7 @@ Works as a wrapper for `rules_for_each_nsg` module allowing to define the same s
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/multi_nsg_rules"
+  source = "github.com/undp/tf-modules//azure_landing_zone/multi_nsg_rules?ref=v0.1.0"
 
   nsg_map = {
     vnet_A = {

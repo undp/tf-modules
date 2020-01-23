@@ -14,7 +14,7 @@ Creates a set of Azure Resource Groups named as `{{NAMESPACE}}_{{NAME_PREFIX}}_{
 
 ```hcl
 module "resource_groups" {
-  source = "./modules/rg_for_each_location"
+  source = "github.com/undp/tf-modules//azure_landing_zone/rg_for_each_location?ref=v0.1.0"
 
   locations  = [
     "northeurope",

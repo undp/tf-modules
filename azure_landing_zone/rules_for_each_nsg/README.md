@@ -15,7 +15,7 @@ For each `nsg_map[key].nsg_rg_name` Resource Group, module creates all Applicati
 
 ```hcl
 module "vnets_peered" {
-  source = "./modules/rules_for_each_nsg"
+  source = "github.com/undp/tf-modules//azure_landing_zone/rules_for_each_nsg?ref=v0.1.0"
 
   nsg_map = {
     vnet_A = {
