@@ -29,7 +29,7 @@ pre-commit run end-of-file-fixer
 
 git commit --message "new: pkg: Generate latest CHANGELOG. !minor"
 
-gitchangelog ^${CUR_VERSION} HEAD | sed 's/^.*!wip.*$//' | sed '/^$/N;/^\n$/D' | sed "s/## (unreleased)/${NEW_VERSION} (${DATE})/" | sed 's/### //' > RELEASE.md
+gitchangelog ^v${CUR_VERSION} HEAD | sed 's/^.*!wip.*$//' | sed '/^$/N;/^\n$/D' | sed "s/## (unreleased)/${NEW_VERSION} (${DATE})/" | sed 's/### //' > RELEASE.md
 
 git flow release finish --showcommands -f RELEASE.md ${NEW_VERSION}
 
