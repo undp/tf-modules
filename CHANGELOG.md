@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.2 (2020-01-28)
+## 0.1.3 (2020-01-29)
+
+### Fix
+
+* Use UTC consistently (fixes #5). [OK-UNDP]
+
+## v0.1.2 (2020-01-29)
 
 ### Fix
 

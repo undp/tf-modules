@@ -5,7 +5,7 @@ export GIT_MERGE_AUTOEDIT=no
 BUMP_PART=${1:-"release"}
 NEW_VERSION=${2:-`bump2version --dry-run --list ${BUMP_PART} | grep new_version= | sed 's/new_version=//'`}
 CUR_VERSION=`bump2version --dry-run --list ${BUMP_PART} | grep current_version= | sed 's/current_version=//'`
-DATE=`date +%F`
+DATE=`date -u +%F`
 
 git flow release start ${NEW_VERSION}
 
