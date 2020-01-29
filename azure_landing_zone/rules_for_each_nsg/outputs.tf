@@ -1,14 +1,16 @@
-output "asg_names" {
-  description = "List of ASG names."
-  value       = values(azurerm_application_security_group.nsg_rules)[*].name
+output "rule_names" {
+  description = "List of NSG rule names."
+  value       = values(azurerm_network_security_rule.nsg_rules)[*].name
 }
 
-output "asg_ids" {
-  description = "List of ASG IDs."
-  value       = values(azurerm_application_security_group.nsg_rules)[*].id
+output "rule_ids" {
+  description = "List of NSG rule IDs."
+  value       = values(azurerm_network_security_rule.nsg_rules)[*].id
 }
 
-output "asg_map" {
-  description = "Map of input `nsg_map.key` to resulting ASG properties."
-  value       = local.clean_asg_set
+output "rule_map" {
+  description = "Map of input `nsg_map` keys to list of NSG rule objects."
+  value = {
+    for rule_key, rule in azurerm_network_security_rule.nsg_rules : local.rules_map[rule_key].nsg_key => rule...
+  }
 }

@@ -1,23 +1,20 @@
 ---
-page_title: "Terraform :: Modules :: Azure :: rules_for_each_nsg"
+page_title: "Terraform :: Modules :: Azure :: asgs_for_each_nsg"
 tags:
   - Terraform
   - tf_modules
-  - NSG
-  - Network Security Group
-  - Security Rules
+  - ASG
+  - Application Security Group
 ---
-# rules_for_each_nsg
+# asgs_for_each_nsg
 
-Each `nsg_map[key].nsg_name` Network Security Group is populated with the security rules from the `nsg_map[key].nsg_rules` list.
-
-> Note: Application Security Groups used in `nsg_map[key].nsg_rules` are imported as `data` and thus, MUST exist prior to invocation of this module.
+For each `nsg_map[key].nsg_rg_name` Resource Group, module creates all Application Security Groups mentioned as either the source or destination in the `nsg_map[key].nsg_rules` list with the names `{{[source|destination]_asg}}`.
 
 ## Example Usage
 
 ```hcl
-module "vnets_peered" {
-  source = "github.com/undp/tf-modules//azure_landing_zone/rules_for_each_nsg?ref=v0.1.0"
+module "common_asg" {
+  source = "github.com/undp/tf-modules//azure_landing_zone/asgs_for_each_nsg?ref=v0.1.0"
 
   nsg_map = {
     vnet_A = {
@@ -53,8 +50,6 @@ module "vnets_peered" {
     }
   }
 
-  asg_auto_create = false
-
   namespace = "deep"
 
   tags = {
@@ -68,7 +63,7 @@ module "vnets_peered" {
 
 The following arguments are supported:
 
-* `nsg_map` - (Required) Map of NSG parameters.
+* `nsg_map` - (Required) Map of VNETs to NSG rules and corresponding RGs where they should be deployed.
 
 * `namespace` - (Optional) Namespace to use as a prefix in resource names and in tags.
 
@@ -78,8 +73,8 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `rule_names` - List of NSG rule names.
+* `asg_names` - List of ASG names.
 
-* `rule_ids` - List of NSG rule IDs.
+* `asg_ids` - List of ASG IDs.
 
-* `rule_map` - Map of input `nsg_map` keys to list of NSG rule objects.
+* `asg_map` - Map of input `nsg_map` keys to ASG properties.
