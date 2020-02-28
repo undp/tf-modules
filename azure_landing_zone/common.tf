@@ -7,5 +7,6 @@ terraform {
 
 # Pinning Azure provider to specific version
 provider "azurerm" {
-  version = "= 1.39"
+  version = "= 2.0.0"
+  features {}
 }
