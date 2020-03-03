@@ -1,6 +1,14 @@
 # Changelog
 
-## 0.1.3 (2020-01-29)
+## 0.1.4rc1 (2020-03-03)
+
+### New
+
+* Module for flexible Linux VMSS deployment. [OK-UNDP]
+
+* Flexible deployment of Shared Image Galleries in multiple regions. [OK-UNDP]
+
+## v0.1.3 (2020-01-29)
 
 ### Fix
 
