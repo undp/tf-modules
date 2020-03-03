@@ -7,20 +7,50 @@ This repo contains `Terraform` modules for building a multi-region Hub-Spoke inf
 Modules could be used in your `Terraform` code by referencing this repo in the `module` block the following way:
 
 ```hcl
-module "resource_groups" {
-  source = "github.com/undp/tf-modules//azure_landing_zone/rg_for_each_location?ref=v0.1.0"
+module "linux_scale_set" {
+  source = "github.com/undp/tf-modules//azure_landing_zone/vmss_for_each_rg?ref=v0.1.4rc1"
 
-  locations  = [
-    "northeurope",
-    "westeurope"
-  ]
+  region_rg_map = {
+    eastus        = "rg1"
+    canadacentral = "rg2"
+  }
 
-  name_prefix = "app"
+  conf_module = {
+    enable_const_capacity = true
+    enable_lb_ext         = true
+    enable_lb_ext_nat_ssh = true
+  }
 
-  namespace = "dev"
+  conf_common = {
+    vm_size      = "Standard_DS1_v2"
+    vm_instances = 2
+
+    image_publisher = "Canonical"
+    image_offer     = "UbuntuServer"
+    image_sku       = "18.04-LTS"
+    image_version   = "latest"
+
+    os_disk_ephemeral = true
+  }
+
+  conf_map = {
+    eastus  = {
+      name = "alice"
+      admin_username = "admin_alice"
+      public_key = file("alice_ssh_key.pub")
+    }
+    canadacentral = {
+      name = "bob"
+      admin_username = "admin_bob"
+      public_key = file("bob_ssh_key.pub")
+    }
+  }
+
+  namespace = "deep"
 
   tags = {
-    Owner = "App Team"
+    BU    = "Enterprise"
+    Owner = "Security"
   }
 }
 ```
@@ -30,7 +60,7 @@ module "resource_groups" {
 All modules have [`common.tf` symlink to the single file][CommonTfRef] defining the following requirements for the version of Terraform and Azure provider.
 
 * Terraform >= 0.12
-* Azure provider = 1.39
+* Azure provider = 2.0
 
 It is also expected that `Terraform` state is stored using `azurerm` backend. It is advised to use a tool like [Terragrunt][TerragruntRef] to manage state storage compartmentalization.
 
