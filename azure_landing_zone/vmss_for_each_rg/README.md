@@ -184,7 +184,7 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
   > **NOTE:** This parameter is considered only if `conf_module.enable_zone_specific` is `true`. Otherwise, module ignores this parameter and uses `null` as a value.
 
-* `zones` - (Optional) A list of Availability Zones in which the VMs in the Scale Set should be created in. If unspecified, module uses `[1, 2, 3]`.
+* `zones` - (Optional) A list of Availability Zones in which the VMs in the Scale Set should be created in. If unspecified, module uses empty list `[]`.
 
   > **NOTE:** This parameter is considered only if `conf_module.enable_zone_redundant` is `true`. Otherwise, module ignores this parameter and uses `null` as a value.
 

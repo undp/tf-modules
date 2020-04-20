@@ -177,7 +177,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   zones = local.enable_zone_redundant && ! local.enable_pip_prefix ? lookup(
     var.conf_common, "zones", lookup(lookup(
       var.conf_map, each.key, {}), "zones",
-      [1, 2, 3]
+      []
       )) : local.enable_zone_specific && ! local.enable_pip_prefix ? [lookup(
       var.conf_common, "availability_zone", lookup(lookup(
         var.conf_map, each.key, {}), "availability_zone",
