@@ -90,9 +90,8 @@ resource "azurerm_lb_backend_address_pool" "lb_ext" {
   loadbalancer_id     = azurerm_lb.ext[each.key].id
 }
 
-
 # Deploy TCP/22(SSH) Health Probe for external LB in each regional RG
-resource "azurerm_lb_probe" "lb_ext_ssh" {
+resource "azurerm_lb_probe" "lb_ext" {
   for_each = local.enable_lb_ext ? var.region_rg_map : {}
 
   name = join("_", compact([
@@ -104,17 +103,42 @@ resource "azurerm_lb_probe" "lb_ext_ssh" {
       )
     )),
     lower(each.key),
-    "lb_ext_probe_ssh"
+    "lb_ext_probe"
   ]))
 
   resource_group_name = data.azurerm_resource_group.vmss[each.key].name
   loadbalancer_id     = azurerm_lb.ext[each.key].id
 
-  protocol = "Tcp"
-  port     = 22
+  protocol = lookup(
+    var.conf_common, "probe_protocol", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_protocol",
+      "Tcp"
+  ))
+  port = lookup(
+    var.conf_common, "probe_port", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_port",
+      22
+  ))
+  request_path = lower(lookup(
+    var.conf_common, "probe_protocol", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_protocol",
+      "Tcp"
+    ))) != "tcp" ? lookup(
+    var.conf_common, "probe_request_path", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_request_path",
+      "/"
+  )) : null
 
-  interval_in_seconds = 5
-  number_of_probes    = 2
+  interval_in_seconds = lookup(
+    var.conf_common, "probe_interval", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_interval",
+      15
+  ))
+  number_of_probes = lookup(
+    var.conf_common, "probe_number", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_number",
+      2
+  ))
 }
 
 # Deploy TCP/22(SSH) external rule for LB in each regional RG
@@ -136,7 +160,7 @@ resource "azurerm_lb_rule" "lb_ext_ssh" {
 
   loadbalancer_id         = azurerm_lb.ext[each.key].id
   backend_address_pool_id = azurerm_lb_backend_address_pool.lb_ext[each.key].id
-  probe_id                = azurerm_lb_probe.lb_ext_ssh[each.key].id
+  probe_id                = azurerm_lb_probe.lb_ext[each.key].id
 
   protocol      = "Tcp"
   frontend_port = 22
@@ -145,7 +169,7 @@ resource "azurerm_lb_rule" "lb_ext_ssh" {
   frontend_ip_configuration_name = "PublicIP"
 }
 
-# Deploy NAT pool for SSH access to VMSS throgh LB in each regional RG
+# Deploy NAT pool for SSH access to VMSS through LB in each regional RG
 resource "azurerm_lb_nat_pool" "lb_ext_ssh" {
   for_each = local.enable_lb_ext_nat_ssh ? var.region_rg_map : {}
 

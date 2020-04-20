@@ -1,4 +1,4 @@
-# Ensure all module-wide options are properly defiened
+# Ensure all module-wide options are properly defined
 locals {
   enable_const_capacity  = lookup(var.conf_module, "enable_const_capacity", false)
   enable_lb_ext          = lookup(var.conf_module, "enable_lb_ext", false)
@@ -162,6 +162,12 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   resource_group_name = data.azurerm_resource_group.vmss[each.key].name
   location            = data.azurerm_resource_group.vmss[each.key].location
 
+  custom_data = lookup(
+    var.conf_common, "custom_data", lookup(lookup(
+      var.conf_map, each.key, {}), "custom_data",
+      null
+  ))
+
   computer_name_prefix = lookup(
     var.conf_common, "computer_name_prefix", lookup(lookup(
       var.conf_map, each.key, {}), "computer_name_prefix",
@@ -177,7 +183,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   zones = local.enable_zone_redundant && ! local.enable_pip_prefix ? lookup(
     var.conf_common, "zones", lookup(lookup(
       var.conf_map, each.key, {}), "zones",
-      [1, 2, 3]
+      []
       )) : local.enable_zone_specific && ! local.enable_pip_prefix ? [lookup(
       var.conf_common, "availability_zone", lookup(lookup(
         var.conf_map, each.key, {}), "availability_zone",
@@ -405,7 +411,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     var.conf_common, "upgrade_mode", lookup(lookup(
       var.conf_map, each.key, {}), "upgrade_mode",
       "Automatic"
-  )) != "Manual" ? azurerm_lb_probe.lb_int_ssh[each.key].id : null
+  )) != "Manual" ? azurerm_lb_probe.lb_int[each.key].id : null
 
   dynamic "automatic_os_upgrade_policy" {
     for_each = lookup(
@@ -465,7 +471,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   }
 
   # VMSS requires health probe that is used by some LB rule.
-  # This creates implicity dependency on the LB rule that must
+  # This creates implicit dependency on the LB rule that must
   # be identified explicitly.
   depends_on = [
     azurerm_lb_rule.lb_int

@@ -1,5 +1,5 @@
 variable "region_rg_map" {
-  description = "Map of locations to RG names where resoures are deployed for each region."
+  description = "Map of locations to RG names where resources are deployed for each region."
   type        = map(string)
   default = {
     westeurope  = "rg1"

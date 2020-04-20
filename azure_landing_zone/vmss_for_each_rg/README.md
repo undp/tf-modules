@@ -11,21 +11,21 @@ tags:
 
 Deploys a set of Linux VM Scale Set (VMSS) resources into each corresponding regional Resource Group (RG) specified by the values of the `region_rg_map`.
 
-By default, module deploys an internal Load Balancer (LB) with SKU `Standard` along each VMSS. The internal LB is configured to assign as a Frontend a `Dynamic` IP from the same subnet as the VMSS instances. The internal LB has a single Backend Pool where each VM from the Scale Set is placed. If `conf_module.enable_lb_int_rule_ha` is `true`, LB rule for Hight-Availability Ports is created balancing all `TCP/UDP` packets to any port of the Frontend IP. If `conf_module.enable_lb_int_rule_ha` is `false`, LB rule for the port `TCP/22 (SSH)` is associated with the internal LB and a Health Probe for the same port is deployed.
+By default, module deploys an internal Load Balancer (LB) with SKU `Standard` along each VMSS. The internal LB is configured to assign as a Frontend a `Dynamic` IP from the same subnet as the VMSS instances. The internal LB has a single Backend Pool where each VM from the Scale Set is placed. If `conf_module.enable_lb_int_rule_ha` is `true`, LB rule for Hight-Availability Ports is created balancing all `TCP/UDP` packets to any port of the Frontend IP. If `conf_module.enable_lb_int_rule_ha` is `false`, LB rule for the port `TCP/22 (SSH)` is associated with the internal LB.
 
 If `conf_module.enable_const_capacity` is `true`, each Scale Set is configured with an auto-scale rule to maintain constant instance count (useful for `Spot` instances).
 
-If `conf_module.enable_lb_ext` is `true`, module deploys another external LB with a static Public IP (PIP) in each region. By default, an LB rule for the port `TCP/22 (SSH)` is associated with the external LB and a Health Probe for the same port is deployed. However if `enable_lb_ext_nat_ssh` is `true`, deploys a NAT Pool instead of the LB rule to directly map `TCP/20000, TCP/20001 ... TCP/20000+N` into `TCP/22 (SSH)` for all `N` VMs in the Scale Set.
+If `conf_module.enable_lb_ext` is `true`, module deploys another external LB with a static Public IP (PIP) in each region. By default, an LB rule for the port `TCP/22 (SSH)` is associated with the external LB. However if `enable_lb_ext_nat_ssh` is `true`, deploys a NAT Pool instead of the LB rule to directly map `TCP/20000, TCP/20001 ... TCP/20000+N` into `TCP/22 (SSH)` for all `N` VMs in the Scale Set.
 
-If `conf_module.enable_pip_per_vm` is `true`, module assigns individual PIPs to each VM instance in the Scale Set. If in addition `conf_module.enable_pip_prefix` is `true`, PIPs are assigned from a single PIP prefix resource. The PIP prefix allocates IPs based on the `prefix_length` that takes values between `24` and `31`. Module calculates `prefix_length` as `32 - ceil(log(vm_instances, 2))`. As such, this use-case imposes a maximum limit of `vm_instances = 256` and opens up a possibility of charges for unused capacity (see below).
+If `conf_module.enable_pip_per_vm` is `true`, module assigns individual PIPs to each VM instance in the Scale Set. If in addition `conf_module.enable_pip_prefix` is `true`, PIPs are assigned from a single PIP prefix resource. The PIP prefix allocates IPs based on the `prefix_length` that takes values between `28` and `31` (limit could be lowered up to `24` by request). Module calculates `prefix_length` as `32 - ceil(log(vm_instances, 2))`. As such, this use-case imposes a maximum limit of `vm_instances = 16` and opens up a possibility of charges for unused capacity (see below). For edge cases with `vm_instances = 1` or `vm_instances > 16` having `conf_module.enable_pip_prefix = true` would cause Terraform Azure Provider to return `Error: expected prefix_length to be in the range (28 - 31)`.
 
-> **IMPORTANT!** Public IP prefixes are charged per IP per hour. As soon as a prefix is created, you are charged. So, `vm_instances` values that are not powers of 2 (e.g. `2`, `4`, `8`, `16`) will result in unused but billed Public IPs. For example, if you deploy a VMSS with `vm_instances = 5` the PIP prefix will be created with `prefix_length = 29` and would contain `8` IPs in total. While your VMSS only uses `5` PIPs from the prefix, you will be billed for `8` PIPs allocated throgh the PIP prefix.
+> **IMPORTANT!** Public IP prefixes are charged per IP per hour. As soon as a prefix is created, you are charged. So, `vm_instances` values that are not powers of 2 (e.g. `2`, `4`, `8`, etc.) will result in unused but billed Public IPs. For example, if you deploy a VMSS with `vm_instances = 5` the PIP prefix will be created with `prefix_length = 29` and would contain `8` IPs in total. While your VMSS only uses `5` PIPs from the prefix, you will be billed for `8` PIPs allocated through the PIP prefix.
 
 If `conf_module.enable_zone_specific` is `true`, VMSS and internal LB's Frontend are deployed in a specific zone defined by the `availability_zone` option.
 
 > **NOTE:** LB Frontends configured with a Public IP do not support zone-specific deployment. As such, when `conf_module.enable_lb_ext` is `true`, external LB's Frontend is deployed without anchoring to a specific Availability Zone.
 
-if `conf_module.enable_zone_redundant` is `true`, VMSS is deployed in mult-zone configuration specified in the `zones` option.
+if `conf_module.enable_zone_redundant` is `true`, VMSS is deployed in multi-zone configuration specified in the `zones` option.
 
 > **NOTE:** It appears that VMSS could not be anchored in one or more zones, if it uses zone-specific PIP prefix (VMSS deployment error "Cannot specify Tags or Zones [...] for PublicIp [...] that is referencing PublicIpPrefix Id [...]"). As such, when `conf_module.enable_zone_*`, `conf_module.enable_pip_per_vm` and `conf_module.enable_pip_prefix` are `true`, each VMSS is deployed without anchoring to a single or multiple Availability Zones.
 
@@ -104,11 +104,9 @@ A `conf_module` parameter supports the following options:
 
 * `enable_const_capacity` - (Optional) Does each Scale Set has an auto-scale rule to maintain constant instance capacity? If unspecified, module uses `false` as a default.
 
-* `enable_lb_int_rule_ha` - (Optional) Does each internal LB of a Scale Set has a rule implementing HA Ports balancing instead of the regular `TCP/22 (SSH)`? If unspecified, module uses `false` as a default.
+* `enable_lb_int_rule_ha` - (Optional) Does each internal LB have a balancing rule for High-Availability ports configured (useful for network virtual appliance deployment)? If unspecified, module uses `false` as a default.
 
 * `enable_lb_ext` - (Optional) Does each Scale Set has an external LB with a static PIP and a balancing rule for `TCP/22 (SSH)` assigned to it? If unspecified, module uses `false` as a default.
-
-* `enable_lb_int_rule_ha` - (Optional) Does each internal LB have a balancing rule for High-Availability ports configured (useful for network virtual appliance deployment)? If unspecified, module uses `false` as a default.
 
 * `enable_lb_ext_nat_ssh` - (Optional) Does each external LB have a NAT Pool configured instead of the balancing rule to reach individual VMs in the Scale Set over `SSH` to PIP and port `20000 + N` where `N` is the instance number? If unspecified, module uses `false` as a default.
 
@@ -148,17 +146,19 @@ Both `conf_common` and `conf_map` parameters support the following options:
     * `lb_ext_backend` for Backend Pool of the external LB
     * `lb_ext_pip` for external LB's Public IP
     * `lb_ext_pool_ssh` for optional NAT Pool associated with the external LB
-    * `lb_ext_probe_ssh` for a Health Probe of `TCP/22 (SSH)` associated with the external LB
+    * `lb_ext_probe` for a Health Probe associated with the external LB
     * `lb_ext_rule_ssh` for the external LB Rule balancing inbound traffic to `TCP/22 (SSH)`
     * `lb_int` for internal LB
     * `lb_int_backend` for Backend Pool of the internal LB
-    * `lb_int_probe_ssh` for a Health Probe of `TCP/22 (SSH)` associated with the internal LB
+    * `lb_int_probe` for a Health Probe associated with the internal LB
     * `lb_int_rule_ha` for the internal LB Rule implementing HA Ports
     * `lb_int_rule_ssh` for the internal LB Rule balancing inbound traffic to `TCP/22 (SSH)`
     * `prefix` for Public IP Prefix
     * `vmss` for the Scale Set
 
 * `computer_name_prefix` - (Optional) The prefix which should be used as part of the hostname for each VM in the Scale Set. If unspecified, module uses `null` causing `azurerm` provider to default to the value for the `name` field.
+
+* `custom_data` - (Optional) The BASE64-encoded Custom Data which would be provided to each VM in the Scale Set (usually used for `cloud-init` or custom provisioning steps).
 
 * `vm_size` - (Required) The Virtual Machine SKU for the Scale Set, such as `Standard_F2`. If unspecified, module uses `null` causing `azurerm` provider to fail the deployment.
 
@@ -184,7 +184,7 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
   > **NOTE:** This parameter is considered only if `conf_module.enable_zone_specific` is `true`. Otherwise, module ignores this parameter and uses `null` as a value.
 
-* `zones` - (Optional) A list of Availability Zones in which the VMs in the Scale Set should be created in. If unspecified, module uses `[1, 2, 3]`.
+* `zones` - (Optional) A list of Availability Zones in which the VMs in the Scale Set should be created in. If unspecified, module uses empty list `[]`.
 
   > **NOTE:** This parameter is considered only if `conf_module.enable_zone_redundant` is `true`. Otherwise, module ignores this parameter and uses `null` as a value.
 
@@ -196,21 +196,21 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
 * `image_publisher` - (Required) Specifies the image publisher reference that each VM in the Scale Set should be based on. If unspecified, module uses `null` causing `azurerm` provider to fail the deployment.
 
-  > **NOTE:** If `source_image_id` is set, this parameter is ignored.
+  > **NOTE:** If `image_id` is set, this parameter is ignored.
 
 * `image_offer` - (Required) Specifies the the image offer reference that each VM in the Scale Set should be based on. If unspecified, module uses `null` causing `azurerm` provider to fail the deployment.
 
-  > **NOTE:** If `source_image_id` is set, this parameter is ignored.
+  > **NOTE:** If `image_id` is set, this parameter is ignored.
 
 * `image_sku` - (Required) Specifies the the image SKU reference that each VM in the Scale Set should be based on. If unspecified, module uses `null` causing `azurerm` provider to fail the deployment.
 
-  > **NOTE:** If `source_image_id` is set, this parameter is ignored.
+  > **NOTE:** If `image_id` is set, this parameter is ignored.
 
 * `image_version` - (Required) Specifies the the image version reference that each VM in the Scale Set should be based on. If unspecified, module uses `null` causing `azurerm` provider to fail the deployment.
 
   > **NOTE:** If `source_image_id` is set, this parameter is ignored.
 
-* `source_image_id` - (Optional) The ID of an image which each VM in the Scale Set should be based on.
+* `image_id` - (Optional) The ID of a custom image which each VM in the Scale Set should be based on.
 
 * `os_disk_caching` - (Optional) The type of caching which should be used for the OS disk of each VM in the Scale Set. Possible values are `None`, `ReadOnly` and `ReadWrite`. If unspecified, module uses `None` as a default.
 
@@ -287,6 +287,20 @@ Both `conf_common` and `conf_map` parameters support the following options:
 * `rolling_upgrade_pause_time` - (Optional) The wait time between completing the update for all VMs in one batch and starting the next batch. The time duration should be specified in ISO 8601 format. If unspecified, module uses `PT30S` as a default.
 
   > **NOTE:** This parameter is applied only if `upgrade_mode` is set to `Rolling`.
+
+* `probe_protocol` - (Optional) The protocol of the health probe endpoint for each VM in the Scale Set. Possible values are `Http`, `Https` or `Tcp`. If unspecified, module uses `Tcp` as a default.
+
+* `probe_port` - (Optional) The port of the health probe endpoint for each VM in the Scale Set. Possible values range from `1` to `65535`, inclusive. If unspecified, module uses `22` as a default.
+
+* `probe_request_path` - (Optional) The HTTP URI used for requesting health status from the health probe endpoint for each VM in the Scale Set. If unspecified, module uses `/` as a default.
+
+  > **NOTE:** This parameter is applied only if `probe_protocol` is set to `Http` or `Https`.
+
+* `probe_interval` - (Optional) The interval, in seconds between probes to the health endpoint for each VM in the Scale Set. If unspecified, module uses `15` as a default.
+
+* `probe_number` - (Optional) The number of failed probe attempts after which the endpoint is removed from rotation. If unspecified, module uses `2` as a default.
+
+  > **NOTE:**  `probe_number` multiplied by `probe_interval` value must be greater or equal to `10`.
 
 ## Output variables
 
