@@ -1,4 +1,4 @@
-# Ensure all module-wide options are properly defiened
+# Ensure all module-wide options are properly defined
 locals {
   enable_const_capacity  = lookup(var.conf_module, "enable_const_capacity", false)
   enable_lb_ext          = lookup(var.conf_module, "enable_lb_ext", false)
@@ -411,7 +411,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     var.conf_common, "upgrade_mode", lookup(lookup(
       var.conf_map, each.key, {}), "upgrade_mode",
       "Automatic"
-  )) != "Manual" ? azurerm_lb_probe.lb_int_ssh[each.key].id : null
+  )) != "Manual" ? azurerm_lb_probe.lb_int[each.key].id : null
 
   dynamic "automatic_os_upgrade_policy" {
     for_each = lookup(
@@ -471,7 +471,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   }
 
   # VMSS requires health probe that is used by some LB rule.
-  # This creates implicity dependency on the LB rule that must
+  # This creates implicit dependency on the LB rule that must
   # be identified explicitly.
   depends_on = [
     azurerm_lb_rule.lb_int

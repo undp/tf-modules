@@ -56,8 +56,8 @@ resource "azurerm_lb_backend_address_pool" "lb_int" {
   loadbalancer_id     = azurerm_lb.int[each.key].id
 }
 
-# Deploy TCP/22(SSH) Health Probe for internal LB in each regional RG
-resource "azurerm_lb_probe" "lb_int_ssh" {
+# Deploy Health Probe for internal LB in each regional RG
+resource "azurerm_lb_probe" "lb_int" {
   for_each = var.region_rg_map
 
   name = join("_", compact([
@@ -69,17 +69,42 @@ resource "azurerm_lb_probe" "lb_int_ssh" {
       )
     )),
     lower(each.key),
-    "lb_int_probe_ssh"
+    "lb_int_probe"
   ]))
 
   resource_group_name = data.azurerm_resource_group.vmss[each.key].name
   loadbalancer_id     = azurerm_lb.int[each.key].id
 
-  protocol = "Tcp"
-  port     = 22
+  protocol = lookup(
+    var.conf_common, "probe_protocol", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_protocol",
+      "Tcp"
+  ))
+  port = lookup(
+    var.conf_common, "probe_port", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_port",
+      22
+  ))
+  request_path = lower(lookup(
+    var.conf_common, "probe_protocol", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_protocol",
+      "Tcp"
+    ))) != "tcp" ? lookup(
+    var.conf_common, "probe_request_path", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_request_path",
+      "/"
+  )) : null
 
-  interval_in_seconds = 5
-  number_of_probes    = 2
+  interval_in_seconds = lookup(
+    var.conf_common, "probe_interval", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_interval",
+      15
+  ))
+  number_of_probes = lookup(
+    var.conf_common, "probe_number", lookup(lookup(
+      var.conf_map, each.key, {}), "probe_number",
+      2
+  ))
 }
 
 # Deploy rule for internal LB in each regional RG
@@ -102,7 +127,7 @@ resource "azurerm_lb_rule" "lb_int" {
 
   loadbalancer_id         = azurerm_lb.int[each.key].id
   backend_address_pool_id = azurerm_lb_backend_address_pool.lb_int[each.key].id
-  probe_id                = azurerm_lb_probe.lb_int_ssh[each.key].id
+  probe_id                = azurerm_lb_probe.lb_int[each.key].id
 
   protocol                       = local.enable_lb_int_rule_ha ? "All" : "Tcp"
   frontend_ip_configuration_name = "InternalIP"
