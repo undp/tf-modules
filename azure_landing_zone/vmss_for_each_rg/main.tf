@@ -162,6 +162,12 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   resource_group_name = data.azurerm_resource_group.vmss[each.key].name
   location            = data.azurerm_resource_group.vmss[each.key].location
 
+  custom_data = lookup(
+    var.conf_common, "custom_data", lookup(lookup(
+      var.conf_map, each.key, {}), "custom_data",
+      null
+  ))
+
   computer_name_prefix = lookup(
     var.conf_common, "computer_name_prefix", lookup(lookup(
       var.conf_map, each.key, {}), "computer_name_prefix",

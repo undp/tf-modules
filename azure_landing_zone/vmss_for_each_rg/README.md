@@ -160,6 +160,8 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
 * `computer_name_prefix` - (Optional) The prefix which should be used as part of the hostname for each VM in the Scale Set. If unspecified, module uses `null` causing `azurerm` provider to default to the value for the `name` field.
 
+* `custom_data` - (Optional) The BASE64-encoded Custom Data which would be provided to each VM in the Scale Set (usually used for `cloud-init` or custom provisioning steps).
+
 * `vm_size` - (Required) The Virtual Machine SKU for the Scale Set, such as `Standard_F2`. If unspecified, module uses `null` causing `azurerm` provider to fail the deployment.
 
 * `vm_instances` - (Required) The number of VMs in the Scale Set. If unspecified, module uses `1`.
