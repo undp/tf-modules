@@ -1,12 +1,22 @@
 # Changelog
 
-## 0.1.4rc1 (2020-03-03)
+## 0.1.4 (2020-04-20)
 
 ### New
+
+* Custom Health Probe for Linux VMSS (fixes #9). [OK-UNDP]
+
+* Create SIDs for each SIG (fixes #7). [OK-UNDP]
 
 * Module for flexible Linux VMSS deployment. [OK-UNDP]
 
 * Flexible deployment of Shared Image Galleries in multiple regions. [OK-UNDP]
+
+### Fix
+
+* Allow to use Custom Data (fixes #8). [OK-UNDP]
+
+* Default availability zones (fixes #6). [OK-UNDP]
 
 ## v0.1.3 (2020-01-29)
 
