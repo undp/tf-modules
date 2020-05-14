@@ -8,7 +8,7 @@ tags:
 ---
 # dns_public_each_location
 
-Deploys one Azure DNS Public Zone with the FQDN `{{zone_name}}.{{namespace}}.{{zone_suffix}}` into the Resource Group `zone_rg`. Then, deploys Azure DNS Public Zones `{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` into each corresponding Resource Group defined by the `region_map_rgs[key]`, where `location` corresponds to the region of each Resource Group. Subsequently, creates NS records in the main Public Zone pointing to NS IPs for each of the regional subdomains deployed.
+Deploys one Azure DNS Public Zone with the FQDN `{{zone_name}}.{{namespace}}.{{zone_suffix}}` into the Resource Group `zone_rg`. Then, deploys Azure DNS Public Zones `{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` into each corresponding Resource Group defined by the `region_map_rgs[key]`, where `key` corresponds to the region of each Resource Group. Subsequently, creates NS records in the main Public Zone pointing to NS IPs for each of the regional subdomains deployed.
 
 ## Example Usage
 
