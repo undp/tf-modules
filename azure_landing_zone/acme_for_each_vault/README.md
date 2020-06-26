@@ -21,8 +21,6 @@ Module configures `ACME` provider to perform `DNS-01` verification against Azure
 
 > **NOTE:** Service Principal must have correct permissions assigned to allow `ACME` provider to temporary modify Azure DNS zones that correspond to `Common Name` and `Subject Alternative Names` of each certificate.
 
-Also, module assumes that FQDNs for `Common Name` and `Subject Alternative Names` follow the convention of `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` and only `{{target}}` portion is configured in corresponding `certs` parameter.
-
 ## Example Usage
 
 ```hcl
@@ -111,6 +109,18 @@ A `conf_module` parameter aggregate module-wide feature flags and supports the f
 
   > **NOTE:** If you deployed module with some value (e.g. `true` for testing) of this parameter and then want to change it to an opposite one (e.g. `false` for production certs), `apply` operation would fail because your plan would use Let's Encrypt API endpoint (URL) that corresponds to new parameter value to revoke old certificates registered with API endpoint (URL) that corresponds to the old parameter value. Perform `destroy` operation with the old value first, then re-deploy module with the new value.
 
+* `enable_exec_dns_challenge` - (Optional) If enabled, module uses an external executable to publish all ACME challenges for corresponding domain names used in certificates. This allows to rely on DNS providers other than Azure DNS. If unspecified, module uses `false` as a default resulting in `azure` DNS challenge provider being used for ACME.
+
+  > **NOTE:** This approach also allows to dedicate a single DNS zone for all ACME challenges. This approach improves security, since access credentials for automated changes could be scoped only to a single DNS zone instead of all possible zones used in certificates. The downside is that this requires a pre-configured `CNAME` to point `_acme-challenge` for all FQDNs used in certificates to such dedicated zone. Specifically, if `tls.your.org` is dedicated for ACME challenges and certificate is generated for `foo.bar.net`, a `CNAME` for `_acme-challenge.foo.bar.net` pointing to `_acme-challenge.foo.bar.net.tls.your.org` would be required.
+
+* `enable_common_certs` - (Optional) If enabled, instead of generating regional certificates, module generates a set of common certificates that are replicated across all regional Key Vaults. If unspecified, module uses `false` as a default.
+
+  > **NOTE:** This parameter sets `enable_fqdn_target` and `enable_full_rg_name` to `true` and makes the module to utilize cert settings only from `conf_common` parameter map.
+
+* `enable_fqdn_target` - (Optional) If enabled, treats strings from `certs` parameter as FQDNs and uses them as-is for `Common Name` and `Subject Alternative Names` fields of corresponding certificate. Otherwise, follows the convention of `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` where the `{{target}}` portion is defined by the strings corresponding `certs` parameter. If unspecified, module uses `false` as a default.
+
+* `enable_full_rg_name` - (Optional) If enabled, treats the value from `zone_rg_name` parameter as a full Resource Group name and uses it as-is bypassing standard name convention expansion.
+
 ### Resource Options
 
 Resource options are defined by either parameters in the `conf_common` map for all regions at once, or by `conf_map` for each region individually. Common parameters from `conf_common` get precedence over region-specific ones from `conf_map`. If no parameter is provided in any of the two, default value is assigned.
@@ -118,6 +128,13 @@ Resource options are defined by either parameters in the `conf_common` map for a
   > **IMPORTANT!** Keys for `region_rg_map` and `conf_map` must match.
 
 Both `conf_common` and `conf_map` parameters support the following options:
+
+* `acme_challenge_script` - (Optional) An executable to be called during `DNS-01` verification to publish all ACME challenges for corresponding domain names used in certificates. The executable is passed the string of parameters `<ACTION> <FQDN> <TOKEN>` where:
+  * `<ACTION>` - either `present` to publish challenge token or `cleanup` to remove it
+  * `<FQDN>` - FQDN for which `DNS-01` verification is being executed
+  * `<TOKEN>` - challenge token value to be published
+
+  > **NOTE:** This option is only used if `enable_exec_dns_challenge` is `true`.
 
 * `certs` - (Required) Map of short cert names to lists of domain name targets. All targets are joined with other parameters like to generate FQDNs following the template `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` (`{{location}}` is defined with `region_rg_map` keys). First target in each list is used to generate FQDN for `common_name` and the rest are used in `subject_alternative_names`.
 
@@ -141,17 +158,21 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
   * `{{location}}` is the keys of `region_rg_map`.
 
+* `recursive_nameservers` - (Optional) A list of recursive nameservers that will be used to check for propagation of the challenge record. If unspecified, module uses system-configured DNS resolvers of the runtime environment.
+
 * `zone_name` - (Optional) Zone name used before the `namespace` in the certificate FQDNs (`{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}`). If unspecified, module uses empty string as a default, effectively dropping it from the FQDN template.
 
 * `zone_suffix` - (Required) Suffix for the certificate FQDNs (`{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}`).
 
-* `zone_rg_name` - (Required) Constant part of the Resource Group name containing DNS Public Zones referenced in domains for certificates to be issues. Module expects RG names to follow the template `{{prefix}}_{{name}}_{{location}}` with the following substitutions:
+* `zone_rg_name` - (Required) Constant part of the Resource Group name containing DNS Public Zones referenced in domains for certificates to be issues. Module expects RG names to follow the standard name convention template `{{prefix}}_{{name}}_{{location}}` with the following substitutions:
 
   * `{{prefix}}` is the value of `namespace`, if defined. Otherwise, `{{prefix}}` is dropped from the name.
 
   * `{{name}}` is the value of `zone_rg`.
 
   * `{{location}}` is the keys of `region_rg_map`.
+
+> **NOTE:** If `enable_full_rg_name` is `true`, module bypasses the standard name convention expansion. Instead, it treats the value from this parameter as a full name and uses it as-is.
 
 ## Output variables
 
