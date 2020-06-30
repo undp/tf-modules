@@ -69,25 +69,25 @@ resource "azurerm_key_vault" "region_key_vault" {
     bypass = lookup(
       var.conf_common, "acls_bypass", lookup(lookup(
         var.conf_map, each.key, {}), "acls_bypass",
-        "None"
+        "AzureServices"
     ))
 
     default_action = lookup(
       var.conf_common, "acls_default_action", lookup(lookup(
         var.conf_map, each.key, {}), "acls_default_action",
-        "Deny"
+        "Allow"
     ))
 
     ip_rules = lookup(
       var.conf_common, "acls_ip_rules", lookup(lookup(
         var.conf_map, each.key, {}), "acls_ip_rules",
-        null
+        []
     ))
 
     virtual_network_subnet_ids = lookup(
       var.conf_common, "acls_subnet_ids", lookup(lookup(
         var.conf_map, each.key, {}), "acls_subnet_ids",
-        null
+        []
     ))
 
   }
