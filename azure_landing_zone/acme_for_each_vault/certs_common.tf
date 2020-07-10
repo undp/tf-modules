@@ -1,12 +1,12 @@
 # Generate map of certificates to be generated
 locals {
   certs_list_common = ! local.enable_common_certs ? [] : [
-      for cert_name, target_list in lookup(var.conf_common, "certs", {}) :
-      {
-        fqdns   = target_list
-        name    = lower(cert_name)
-        zone_rg = lookup(var.conf_common, "zone_rg_name", "")
-      }
+    for cert_name, target_list in lookup(var.conf_common, "certs", {}) :
+    {
+      fqdns   = target_list
+      name    = lower(cert_name)
+      zone_rg = lookup(var.conf_common, "zone_rg_name", "")
+    }
   ]
 
   certs_map_common = {
@@ -35,7 +35,7 @@ resource "acme_certificate" "cert_common" {
   recursive_nameservers = lookup(var.conf_common, "recursive_nameservers", null)
 
   dynamic "dns_challenge" {
-    for_each = local.enable_exec_dns_challenge ?  {} : { 1 = 1 }
+    for_each = local.enable_exec_dns_challenge ? {} : { 1 = 1 }
 
     content {
       provider = "azure"
@@ -46,7 +46,7 @@ resource "acme_certificate" "cert_common" {
   }
 
   dynamic "dns_challenge" {
-    for_each = local.enable_exec_dns_challenge ?  { 1 = 1 } : {}
+    for_each = local.enable_exec_dns_challenge ? { 1 = 1 } : {}
 
     content {
       provider = "exec"
@@ -55,14 +55,18 @@ resource "acme_certificate" "cert_common" {
       }
     }
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Import Let's Encrypt certificates to each regional Key Vault
 resource "azurerm_key_vault_certificate" "cert_common" {
-  for_each =  local.enable_common_certs ? {
+  for_each = local.enable_common_certs ? {
     for record in setproduct(keys(local.certs_map_common), keys(var.region_rg_map)) : "${record[0]}-${record[1]}" => {
       cert_map_key = record[0]
-      region_key = record[1]
+      region_key   = record[1]
     }
   } : {}
 
@@ -81,9 +85,9 @@ resource "azurerm_key_vault_certificate" "cert_common" {
 
     key_properties {
       exportable = true
-      key_size = lookup( var.conf_common, "key_type", 4096)
-      key_type  = "RSA"
-      reuse_key = false
+      key_size   = lookup(var.conf_common, "key_type", 4096)
+      key_type   = "RSA"
+      reuse_key  = false
     }
 
     secret_properties {

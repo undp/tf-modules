@@ -113,6 +113,10 @@ resource "acme_certificate" "cert_region" {
       }
     }
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Import Let's Encrypt certificates to each regional Key Vault
