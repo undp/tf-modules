@@ -56,7 +56,7 @@ resource "azurerm_key_vault" "region_key_vault" {
   soft_delete_enabled = lookup(
     var.conf_common, "soft_delete_enabled", lookup(lookup(
       var.conf_map, each.key, {}), "soft_delete_enabled",
-      false
+      true
   ))
 
   tenant_id = lookup(
