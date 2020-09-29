@@ -52,22 +52,25 @@ module "acme_certs" {
   conf_map = {
     eastus  = {
       certs = {
-        VPN = [
-          "vpn",
-          "vm0.vpn",
-          "vm1.vpn",
-          "vm2.vpn",
-        ]
+        VPN = {
+          common_name = "vpn",
+          subject_alternative_names = [
+            "vm0.vpn",
+            "vm1.vpn",
+            "vm2.vpn",
+          ]
+        }
       }
     }
     canadacentral = {
       certs = {
-        WEB-APPS = [
-          "*.web-apps",
-          "vm0.web-apps",
-          "vm1.web-apps",
-          "vm2.web-apps",
-        ]
+        WEB-APPS = {
+          common_name = "*.web-apps",
+          subject_alternative_names = [
+            "vm0.web-apps",
+            "vm1.web-apps",
+            "vm2.web-apps",
+          ]
       }
     }
   }
@@ -136,19 +139,28 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
   > **NOTE:** This option is only used if `enable_exec_dns_challenge` is `true`.
 
-* `certs` - (Required) Map of short cert names to lists of domain name targets. All targets are joined with other parameters like to generate FQDNs following the template `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` (`{{location}}` is defined with `region_rg_map` keys). First target in each list is used to generate FQDN for `common_name` and the rest are used in `subject_alternative_names`.
+* `certs` - (Required) Map of certificate IDs (used to name corresponding records in the Key Vault) to nested dictionary structure describing parameters for each certificate. All, but `common_name` and `subject_alternative_names` parameters could also be defined in `conf_common` making them common for all certificates. These parameters include the following:
+  * `common_name` - (Required) The certificate's common name, the primary domain that the certificate will be recognized for.
 
-* `cert_password` - (Optional) Password to be used when generating the PFX file stored in `certificate_p12`. If unspecified, module uses `null` as a default.
+    > **NOTE:** If feature flag `enable_fqdn_target` is `true`, FQDN for this parameter is generated following the template `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` where `{{target}}` is defined by parameter's value and `{{location}}` is defined with `region_rg_map` keys.
 
-* `key_type` - (Optional) The key type for the certificate's private key. Accepted values are `2048`, `4096`, and `8192` (for `RSA` keys of respective length). If unspecified, module uses `4096` as a default.
+  * `subject_alternative_names` - (Required) The certificate's subject alternative names, domains that this certificate will also be recognized for.
 
-> **NOTE:** Original option for `acme_certificate` resource also accepts `P256` and `P384` for `ECDSA` keys of respective length. However, the module uses this parameter also in `key_properties.key_size` of the `azurerm_key_vault_certificate` resource and assumes keys are only of type `RSA`.
+    > **NOTE:** If feature flag `enable_fqdn_target` is `true`, FQDNs for this parameter are generated following the template `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` where `{{target}}` is defined by parameter's values and `{{location}}` is defined with `region_rg_map` keys.
 
-* `min_days_remaining` - (Optional) - The minimum amount of days remaining on the expiration of a certificate before a renewal is attempted. A value of less than `0` means that the certificate will never be renewed. If unspecified, module uses `30` as a default.
+  * `cert_password` - (Optional) Password to be used when generating the PFX file stored in `certificate_p12`. If unspecified, module uses `null` as a default.
 
-* `must_staple` - (Optional) Enables the OCSP Stapling Required TLS Security Policy extension. Certificates with this extension must include a valid OCSP Staple in the TLS handshake for the connection to succeed. If unspecified, module uses `false` as a default.
+  * `key_type` - (Optional) The key type for the certificate's private key. Accepted values are `2048`, `4096`, and `8192` (for `RSA` keys of respective length). If unspecified, module uses `4096` as a default.
 
-> **NOTE:** Option has no effect when using an external CSR, it must be enabled in the CSR itself.
+    > **NOTE:** Original option for `acme_certificate` resource also accepts `P256` and `P384` for `ECDSA` keys of respective length. However, the module uses this parameter also in `key_properties.key_size` of the `azurerm_key_vault_certificate` resource and assumes keys are only of type `RSA`.
+
+  * `min_days_remaining` - (Optional) - The minimum amount of days remaining on the expiration of a certificate before a renewal is attempted. A value of less than `0` means that the certificate will never be renewed. If unspecified, module uses `30` as a default.
+
+  * `must_staple` - (Optional) Enables the OCSP Stapling Required TLS Security Policy extension. Certificates with this extension must include a valid OCSP Staple in the TLS handshake for the connection to succeed. If unspecified, module uses `false` as a default.
+
+    > **NOTE:** Option has no effect when using an external CSR, it must be enabled in the CSR itself.
+
+  * `recursive_nameservers` - (Optional) A list of recursive nameservers that will be used to check for propagation of the challenge record. If unspecified, module uses system-configured DNS resolvers of the runtime environment.
 
 * `kv_name` - (Required) Constant part of the Key Vault name. Module expects Key Vault names to follow the template `{{prefix}}-{{resource_name}}-{{location}}` with the following substitutions:
 
@@ -157,8 +169,6 @@ Both `conf_common` and `conf_map` parameters support the following options:
   * `{{resource_name}}` is the value of `kv_name`.
 
   * `{{location}}` is the keys of `region_rg_map`.
-
-* `recursive_nameservers` - (Optional) A list of recursive nameservers that will be used to check for propagation of the challenge record. If unspecified, module uses system-configured DNS resolvers of the runtime environment.
 
 * `zone_name` - (Optional) Zone name used before the `namespace` in the certificate FQDNs (`{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}`). If unspecified, module uses empty string as a default, effectively dropping it from the FQDN template.
 
@@ -172,7 +182,7 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
   * `{{location}}` is the keys of `region_rg_map`.
 
-> **NOTE:** If `enable_full_rg_name` is `true`, module bypasses the standard name convention expansion. Instead, it treats the value from this parameter as a full name and uses it as-is.
+  > **NOTE:** If `enable_full_rg_name` is `true`, module bypasses the standard name convention expansion. Instead, it treats the value from this parameter as a full name and uses it as-is.
 
 ## Output variables
 

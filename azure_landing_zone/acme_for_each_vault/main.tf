@@ -5,9 +5,9 @@ locals {
   acme_url           = "https://${local.acme_server}-v02.api.letsencrypt.org/directory"
 
   enable_exec_dns_challenge = lookup(var.conf_module, "enable_exec_dns_challenge", false)
-  enable_common_certs = lookup(var.conf_module, "enable_common_certs", false)
-  enable_fqdn_target  = local.enable_common_certs || lookup(var.conf_module, "enable_fqdn_target", false)
-  enable_full_rg_name = local.enable_common_certs || lookup(var.conf_module, "enable_full_rg_name", false)
+  enable_common_certs       = lookup(var.conf_module, "enable_common_certs", false)
+  enable_fqdn_target        = local.enable_common_certs || lookup(var.conf_module, "enable_fqdn_target", false)
+  enable_full_rg_name       = local.enable_common_certs || lookup(var.conf_module, "enable_full_rg_name", false)
 }
 
 # Use TLS provider to generate a private key for ACME account
