@@ -139,7 +139,7 @@ Both `conf_common` and `conf_map` parameters support the following options:
 
   > **NOTE:** This option is only used if `enable_exec_dns_challenge` is `true`.
 
-* `certs` - (Required) Map of certificate IDs (used to name corresponding records in the Key Vault) to nested dictionary structure describing parameters for each certificate. All, but `common_name` and `subject_alternative_names` parameters could also be defined in `conf_common` making them common for all certificates. These parameters include the following:
+* `certs` - (Required) Map of certificate IDs (used to name corresponding records in the Key Vault) to nested mapping describing parameters for each certificate. All, but `common_name` and `subject_alternative_names` parameters could also be defined in `conf_common` making them common for all certificates. If certificate-specific parameters are present, they take precedence over common parameter values from `conf_common`. The certificate parameters include the following:
   * `common_name` - (Required) The certificate's common name, the primary domain that the certificate will be recognized for.
 
     > **NOTE:** If feature flag `enable_fqdn_target` is `true`, FQDN for this parameter is generated following the template `{{target}}.{{location}}.{{zone_name}}.{{namespace}}.{{zone_suffix}}` where `{{target}}` is defined by parameter's value and `{{location}}` is defined with `region_rg_map` keys.
