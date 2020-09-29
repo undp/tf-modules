@@ -5,39 +5,39 @@ locals {
       for cert_name, target_list in lookup(var.conf_common, "certs", lookup(lookup(
       var.conf_map, location, {}), "certs", {})) :
       {
-        fqdns = [
-          for target in target_list :
-            local.enable_fqdn_target ? target : lower(join(".", compact([
-              target,
-              location,
-              lookup(
-                var.conf_common, "zone_name", lookup(lookup(
-                  var.conf_map, location, {}), "zone_name",
-                  ""
-              )),
-              var.namespace,
-              lookup(
-                var.conf_common, "zone_suffix", lookup(lookup(
-                  var.conf_map, location, {}), "zone_suffix",
-                  ""
-              )),
-            ])))
-        ]
+        # fqdns = [
+        #   for target in target_list :
+        #     local.enable_fqdn_target ? target : lower(join(".", compact([
+        #       target,
+        #       location,
+        #       lookup(
+        #         var.conf_common, "zone_name", lookup(lookup(
+        #           var.conf_map, location, {}), "zone_name",
+        #           ""
+        #       )),
+        #       var.namespace,
+        #       lookup(
+        #         var.conf_common, "zone_suffix", lookup(lookup(
+        #           var.conf_map, location, {}), "zone_suffix",
+        #           ""
+        #       )),
+        #     ])))
+        # ]
         keyvault_id = data.azurerm_key_vault.region_kv[location].id
         location    = location
         name        = lower(cert_name)
         zone_rg = local.enable_full_rg_name ? lookup(
-            var.conf_common, "zone_rg_name", lookup(lookup(
-              var.conf_map, location, {}), "zone_rg_name",
-              ""
-          )) : lower(join("_", compact([
-           var.namespace,
-           lookup(
-             var.conf_common, "zone_rg_name", lookup(lookup(
-               var.conf_map, location, {}), "zone_rg_name",
-               ""
-           )),
-           location,
+          var.conf_common, "zone_rg_name", lookup(lookup(
+            var.conf_map, location, {}), "zone_rg_name",
+            ""
+            )) : lower(join("_", compact([
+              var.namespace,
+              lookup(
+                var.conf_common, "zone_rg_name", lookup(lookup(
+                  var.conf_map, location, {}), "zone_rg_name",
+                  ""
+              )),
+              location,
         ])))
       }
     ]
@@ -89,7 +89,7 @@ resource "acme_certificate" "cert_region" {
   ))
 
   dynamic "dns_challenge" {
-    for_each = local.enable_exec_dns_challenge ?  {} : { 1 = 1 }
+    for_each = local.enable_exec_dns_challenge ? {} : { 1 = 1 }
 
     content {
       provider = "azure"
@@ -100,7 +100,7 @@ resource "acme_certificate" "cert_region" {
   }
 
   dynamic "dns_challenge" {
-    for_each = local.enable_exec_dns_challenge ?  { 1 = 1 } : {}
+    for_each = local.enable_exec_dns_challenge ? { 1 = 1 } : {}
 
     content {
       provider = "exec"
